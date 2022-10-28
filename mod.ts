@@ -41,7 +41,7 @@ export function createUltraFetch(options: UltraFetchOptions = {}) {
       origin.test(url)
     );
 
-    if (!isOriginAllowed && allowedOrigins.length > 0) {
+    if (!isOriginAllowed) {
       throw new Error(
         `${url.origin} did not match an allowed origin.`,
       );
