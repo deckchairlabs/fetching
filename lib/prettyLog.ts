@@ -10,7 +10,7 @@ import {
   red,
   yellow,
 } from "https://deno.land/std@0.161.0/fmt/colors.ts";
-import { FetchLogRecord } from "../mod.ts";
+import { FetchLogRecord } from "./fetching.ts";
 
 export function prettyLog(logRecord: FetchLogRecord) {
   const prefix = magenta("[fetching]");
@@ -22,6 +22,7 @@ export function prettyLog(logRecord: FetchLogRecord) {
     : brightYellow(`[${logRecord.status}]`);
 
   const methodColor = getMethodColor(logRecord.method);
+  const cached = logRecord.cacheMatch ? green(" [cached]") : "";
 
   const message = sprintf(
     "%s %s %s: %s %s%s",
@@ -30,7 +31,7 @@ export function prettyLog(logRecord: FetchLogRecord) {
     status,
     logRecord.url,
     gray((logRecord.endTime - logRecord.startTime).toFixed(2) + "ms"),
-    logRecord.cacheMatch ? green(" [cached]") : "",
+    cached,
   );
 
   console.log(message);
