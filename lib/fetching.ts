@@ -2,6 +2,11 @@ type FetchImpl = typeof fetch;
 
 export type FetchingOptions = {
   cache?: Cache;
+  /**
+   * The origins which are allowed to be fetched. By default all origins
+   * are blocked and an error will be thrown.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/URLPattern/URLPattern
+   */
   allowedOrigins?: URLPatternInput[];
   log?: (record: FetchLogRecord) => void;
 };
