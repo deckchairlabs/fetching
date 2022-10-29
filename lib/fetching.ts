@@ -76,26 +76,35 @@ export function createFetching(options: FetchingOptions = {}) {
       typeof cache !== "undefined";
     const cached = isCacheable ? await cache.match(input) : undefined;
 
-    function measure() {
+    function measure(status: number) {
       performance.mark(FETCH_END);
       return performance.measure("fetch", {
         start: FETCH_START,
         end: FETCH_END,
+        detail: {
+          url: url.toString(),
+          method,
+          status,
+          cached: cached !== undefined,
+        },
       });
+    }
+
+    function logResponse(response: Response) {
+      const logRecord: FetchLogRecord = {
+        method,
+        url: url.href,
+        status: response.status,
+        measure: measure(response.status),
+        cacheMatch: cached !== undefined,
+      };
+
+      log && log(logRecord);
     }
 
     if (cached) {
       cached.headers.set(CACHE_HEADER_KEY, "hit");
-
-      const logRecord: FetchLogRecord = {
-        method,
-        url: url.href,
-        status: cached.status,
-        measure: measure(),
-        cacheMatch: true,
-      };
-
-      log && log(logRecord);
+      logResponse(cached);
 
       return cached;
     }
@@ -105,16 +114,7 @@ export function createFetching(options: FetchingOptions = {}) {
         cache.put(input, response.clone());
       }
 
-      performance.mark(FETCH_END);
-      const logRecord: FetchLogRecord = {
-        method,
-        url: url.href,
-        status: response.status,
-        measure: measure(),
-        cacheMatch: false,
-      };
-
-      log && log(logRecord);
+      logResponse(response);
 
       return response;
     });
