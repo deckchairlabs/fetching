@@ -37,13 +37,12 @@ const ultraFetch = createUltraFetch({
 
 globalThis.fetch = ultraFetch;
 
-let count = 0;
+let count = 1;
 
 const fetchInterval = setInterval(() => {
-  count++;
+  fetch(`https://jsonplaceholder.typicode.com/todos/${count}`);
   if (count === 10) {
     clearInterval(fetchInterval);
-  } else {
-    fetch("https://jsonplaceholder.typicode.com/todos/1");
   }
+  count++;
 });
