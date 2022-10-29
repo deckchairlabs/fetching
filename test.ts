@@ -6,10 +6,14 @@ const fetching = createFetching({
   log: prettyLog,
   allowedOrigins: [{
     hostname: "httpbin.org",
+  }, {
+    protocol: "file:",
   }],
 });
 
 globalThis.fetch = fetching;
+
+await fetch(new URL("./README.md", import.meta.url));
 
 await fetch("https://httpbin.org/delete", {
   method: "DELETE",

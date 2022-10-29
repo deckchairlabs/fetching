@@ -68,7 +68,7 @@ export function createFetching(options: FetchingOptions = {}) {
 
     if (!isAllowedOrigin) {
       throw new Error(
-        `${url.origin} did not match an allowed origin.`,
+        `${url} did not match an allowed origin.`,
       );
     }
 
@@ -91,15 +91,13 @@ export function createFetching(options: FetchingOptions = {}) {
     }
 
     function logResponse(response: Response) {
-      const logRecord: FetchLogRecord = {
+      log && log({
         method,
         url: url.href,
         status: response.status,
         measure: measure(response.status),
         cacheMatch: cached !== undefined,
-      };
-
-      log && log(logRecord);
+      });
     }
 
     if (cached) {

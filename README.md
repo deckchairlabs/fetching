@@ -21,6 +21,7 @@ const fetching = createFetching({
   }],
 });
 
+// You can do this, or not
 globalThis.fetch = fetching;
 
 // This request will succeed!
