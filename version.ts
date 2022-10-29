@@ -10,7 +10,7 @@ export async function prepublish(version: string) {
   console.log("Patching README.md");
   await Deno.writeTextFile(
     "./README.md",
-    readme.replace(
+    readme.replaceAll(
       VERSION_REGEX,
       newDenoLandVersion,
     ),
