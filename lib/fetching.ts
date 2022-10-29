@@ -16,12 +16,13 @@ export type FetchLogRecord = {
   method: string;
   url: string;
   status: number;
-  startTime: number;
-  endTime: number;
-  cacheMatch?: boolean;
+  measure: PerformanceMeasure;
+  cacheMatch: boolean;
 };
 
 const CACHE_HEADER_KEY = "x-fetching-cache";
+const FETCH_START = "fetch-start";
+const FETCH_END = "fetch-end";
 
 export function createFetching(options: FetchingOptions = {}) {
   const { cache, log, allowedOrigins = [] } = options;
@@ -49,7 +50,8 @@ export function createFetching(options: FetchingOptions = {}) {
   });
 
   const fetching: FetchImpl = async (input, init) => {
-    const startTime = performance.now();
+    performance.mark(FETCH_START);
+
     const method =
       (input instanceof Request
         ? init?.method || input.method
@@ -62,23 +64,9 @@ export function createFetching(options: FetchingOptions = {}) {
       : new URL(input);
 
     const isRemoteOrigin = url.protocol !== "file:";
+    const isAllowedOrigin = await isOriginAllowed(url, allowedOriginPatterns);
 
-    const isPermissionGranted = isRemoteOrigin
-      ? await Deno.permissions.query({
-        name: "net",
-        host: url.host,
-      }).then((status) => status.state === "granted")
-      : await Deno.permissions.query({
-        name: "read",
-        path: url,
-      });
-
-    const isOriginAllowed =
-      (isPermissionGranted && allowedOriginPatterns.length === 0) ||
-      isPermissionGranted &&
-        allowedOriginPatterns.some((origin) => origin.test(url));
-
-    if (isRemoteOrigin && !isOriginAllowed) {
+    if (!isAllowedOrigin) {
       throw new Error(
         `${url.origin} did not match an allowed origin.`,
       );
@@ -88,20 +76,24 @@ export function createFetching(options: FetchingOptions = {}) {
       typeof cache !== "undefined";
     const cached = isCacheable ? await cache.match(input) : undefined;
 
-    const logRecord: FetchLogRecord = {
-      method,
-      url: url.href,
-      status: 200,
-      startTime,
-      endTime: startTime,
-      cacheMatch: cached !== undefined,
-    };
+    function measure() {
+      performance.mark(FETCH_END);
+      return performance.measure("fetch", {
+        start: FETCH_START,
+        end: FETCH_END,
+      });
+    }
 
     if (cached) {
       cached.headers.set(CACHE_HEADER_KEY, "hit");
 
-      logRecord.status = cached.status;
-      logRecord.endTime = performance.now();
+      const logRecord: FetchLogRecord = {
+        method,
+        url: url.href,
+        status: cached.status,
+        measure: measure(),
+        cacheMatch: true,
+      };
 
       log && log(logRecord);
 
@@ -113,8 +105,14 @@ export function createFetching(options: FetchingOptions = {}) {
         cache.put(input, response.clone());
       }
 
-      logRecord.status = response.status;
-      logRecord.endTime = performance.now();
+      performance.mark(FETCH_END);
+      const logRecord: FetchLogRecord = {
+        method,
+        url: url.href,
+        status: response.status,
+        measure: measure(),
+        cacheMatch: false,
+      };
 
       log && log(logRecord);
 
@@ -136,4 +134,22 @@ function getRandomDomain(length = 16) {
   }
 
   return `${hostname}.com`;
+}
+
+export async function isOriginAllowed(url: URL, allowedOrigins: URLPattern[]) {
+  const isRemoteOrigin = url.protocol !== "file:";
+
+  const isPermissionGranted = isRemoteOrigin
+    ? await Deno.permissions.query({
+      name: "net",
+      host: url.host,
+    }).then((status) => status.state === "granted")
+    : await Deno.permissions.query({
+      name: "read",
+      path: url,
+    });
+
+  return (isPermissionGranted && allowedOrigins.length === 0) ||
+    isPermissionGranted &&
+      allowedOrigins.some((origin) => origin.test(url));
 }

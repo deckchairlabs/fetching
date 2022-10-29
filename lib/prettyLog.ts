@@ -23,6 +23,7 @@ export function prettyLog(logRecord: FetchLogRecord) {
 
   const methodColor = getMethodColor(logRecord.method);
   const cached = logRecord.cacheMatch ? green(" [cached]") : "";
+  const duration = logRecord.measure.duration;
 
   const message = sprintf(
     "%s %s %s: %s %s%s",
@@ -30,7 +31,7 @@ export function prettyLog(logRecord: FetchLogRecord) {
     methodColor(logRecord.method),
     status,
     logRecord.url,
-    gray((logRecord.endTime - logRecord.startTime).toFixed(2) + "ms"),
+    gray(duration.toFixed(2) + "ms"),
     cached,
   );
 

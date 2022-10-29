@@ -11,9 +11,7 @@ const fetching = createFetching({
 
 globalThis.fetch = fetching;
 
-await fetch(new URL("./README.md", import.meta.url));
-
-await fetch("https://httpbin.org:8080/delete", {
+await fetch("https://httpbin.org/delete", {
   method: "DELETE",
   headers: new Headers({
     "content-type": "application/json",
