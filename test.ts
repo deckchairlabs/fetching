@@ -1,48 +1,53 @@
-import { sprintf } from "https://deno.land/std@0.161.0/fmt/printf.ts";
-import {
-  brightBlue,
-  brightGreen,
-  brightYellow,
-  gray,
-  magenta,
-} from "https://deno.land/std@0.161.0/fmt/colors.ts";
-import { createUltraFetch } from "./mod.ts";
+import { createFetching } from "./mod.ts";
+import { prettyLog } from "./lib/prettyLog.ts";
 
-const ultraFetch = createUltraFetch({
+const fetching = createFetching({
   cache: await caches.open("v3"),
+  log: prettyLog,
   allowedOrigins: [{
     hostname: "jsonplaceholder.typicode.com",
+  }, {
+    hostname: "httpbin.org",
   }],
-  log(record) {
-    const prefix = magenta("[fetch]");
-
-    const isSuccessfulResponse = record.status >= 200 && record.status < 400;
-    const status = isSuccessfulResponse
-      ? brightGreen(`[${record.status}]`)
-      : brightYellow(`[${record.status}]`);
-
-    const message = sprintf(
-      "%s %s %s: %s %s%s",
-      prefix,
-      brightBlue(record.method),
-      status,
-      record.url,
-      gray((record.endTime - record.startTime).toFixed(2) + "ms"),
-      record.cacheMatch ? gray(" [cached]") : "",
-    );
-
-    console.log(message);
-  },
 });
 
-globalThis.fetch = ultraFetch;
+globalThis.fetch = fetching;
 
-let count = 1;
+await fetch("https://httpbin.org/delete", {
+  method: "DELETE",
+  headers: new Headers({
+    "content-type": "application/json",
+  }),
+  body: JSON.stringify({ foo: "bar" }),
+});
 
-const fetchInterval = setInterval(() => {
-  fetch(`https://jsonplaceholder.typicode.com/todos/${count}`);
-  if (count === 10) {
-    clearInterval(fetchInterval);
-  }
-  count++;
+await fetch("https://httpbin.org/get", {
+  method: "GET",
+  headers: new Headers({
+    "content-type": "application/json",
+  }),
+});
+
+await fetch("https://httpbin.org/patch", {
+  method: "PATCH",
+  headers: new Headers({
+    "content-type": "application/json",
+  }),
+  body: JSON.stringify({ foo: "bar" }),
+});
+
+await fetch("https://httpbin.org/post", {
+  method: "POST",
+  headers: new Headers({
+    "content-type": "application/json",
+  }),
+  body: JSON.stringify({ foo: "bar" }),
+});
+
+await fetch("https://httpbin.org/put", {
+  method: "PUT",
+  headers: new Headers({
+    "content-type": "application/json",
+  }),
+  body: JSON.stringify({ foo: "bar" }),
 });

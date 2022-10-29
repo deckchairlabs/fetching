@@ -1,12 +1,12 @@
 type FetchImpl = typeof fetch;
 
-type UltraFetchOptions = {
+export type FetchingOptions = {
   cache?: Cache;
   allowedOrigins?: URLPatternInput[];
   log?: (record: FetchLogRecord) => void;
 };
 
-type FetchLogRecord = {
+export type FetchLogRecord = {
   method: string;
   url: string;
   status: number;
@@ -17,7 +17,7 @@ type FetchLogRecord = {
 
 const CACHE_HEADER_KEY = "x-ultra-cache";
 
-export function createUltraFetch(options: UltraFetchOptions = {}) {
+export function createFetching(options: FetchingOptions = {}) {
   const { cache, log, allowedOrigins = [] } = options;
   const originalFetch = fetch;
 
@@ -25,11 +25,12 @@ export function createUltraFetch(options: UltraFetchOptions = {}) {
     new URLPattern(input)
   );
 
-  const ultraFetch: FetchImpl = async (input, init) => {
+  const fetching: FetchImpl = async (input, init) => {
     const startTime = performance.now();
-    const method = input instanceof Request
-      ? init?.method || input.method
-      : init?.method || "GET";
+    const method =
+      (input instanceof Request
+        ? init?.method || input.method
+        : init?.method || "GET").toUpperCase();
 
     const url = input instanceof URL
       ? input
@@ -47,7 +48,8 @@ export function createUltraFetch(options: UltraFetchOptions = {}) {
       );
     }
 
-    const cached = cache && await cache.match(input);
+    const isCacheable = method === "GET" && typeof cache !== "undefined";
+    const cached = isCacheable ? await cache.match(input) : undefined;
 
     const logRecord: FetchLogRecord = {
       method,
@@ -83,5 +85,5 @@ export function createUltraFetch(options: UltraFetchOptions = {}) {
     });
   };
 
-  return ultraFetch;
+  return fetching;
 }
