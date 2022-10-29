@@ -13,6 +13,7 @@ import { createFetching } from "https://deno.land/x/fetching@v0.0.1/mod.ts";
 import { prettyLog } from "https://deno.land/x/fetching@v0.0.1/lib/prettyLog.ts";
 
 const fetching = createFetching({
+  // The Cache API is supported
   cache: await caches.open("v1"),
   log: prettyLog,
   allowedOrigins: [{

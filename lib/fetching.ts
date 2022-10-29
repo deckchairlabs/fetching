@@ -61,23 +61,31 @@ export function createFetching(options: FetchingOptions = {}) {
       ? new URL(input.url)
       : new URL(input);
 
-    const isPermissionGranted = await Deno.permissions.query({
-      name: "net",
-      host: url.host,
-    }).then((status) => status.state === "granted");
+    const isRemoteOrigin = url.protocol !== "file:";
+
+    const isPermissionGranted = isRemoteOrigin
+      ? await Deno.permissions.query({
+        name: "net",
+        host: url.host,
+      }).then((status) => status.state === "granted")
+      : await Deno.permissions.query({
+        name: "read",
+        path: url,
+      });
 
     const isOriginAllowed =
       (isPermissionGranted && allowedOriginPatterns.length === 0) ||
       isPermissionGranted &&
         allowedOriginPatterns.some((origin) => origin.test(url));
 
-    if (!isOriginAllowed) {
+    if (isRemoteOrigin && !isOriginAllowed) {
       throw new Error(
         `${url.origin} did not match an allowed origin.`,
       );
     }
 
-    const isCacheable = method === "GET" && typeof cache !== "undefined";
+    const isCacheable = isRemoteOrigin && method === "GET" &&
+      typeof cache !== "undefined";
     const cached = isCacheable ? await cache.match(input) : undefined;
 
     const logRecord: FetchLogRecord = {
@@ -101,7 +109,7 @@ export function createFetching(options: FetchingOptions = {}) {
     }
 
     return originalFetch(input, init).then((response) => {
-      if (response.ok && cache) {
+      if (response.ok && isCacheable && cache) {
         cache.put(input, response.clone());
       }
 
