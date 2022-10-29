@@ -9,7 +9,7 @@ An enhanced `fetch` for Deno.
 ## Usage
 
 ```ts
-import { createFetching } from "https://deno.land/x/fetching@v0.0.1/mod.ts";
+import { createFetching } from "https://deno.land/x/fetching@v0.0.2/mod.ts";
 import { prettyLog } from "https://deno.land/x/fetching@v0.0.1/lib/prettyLog.ts";
 
 const fetching = createFetching({

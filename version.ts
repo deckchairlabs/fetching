@@ -1,4 +1,4 @@
-export const VERSION = "0.0.1";
+export const VERSION = "0.0.2";
 export const VERSION_REGEX = /\/\/deno\.land\/x\/fetching@v[\w\.\-]+\//;
 
 /** `prepublish` will be invoked before publish, return `false` to prevent the publish. */
