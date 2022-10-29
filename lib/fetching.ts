@@ -1,10 +1,11 @@
+import { bold, sprintf, yellow } from "./deps.ts";
+
 type FetchImpl = typeof fetch;
 
 export type FetchingOptions = {
   cache?: Cache;
   /**
-   * The origins which are allowed to be fetched. By default all origins
-   * are blocked and an error will be thrown.
+   * The origins which are allowed to be fetched.
    * @see https://developer.mozilla.org/en-US/docs/Web/API/URLPattern/URLPattern
    */
   allowedOrigins?: URLPatternInput[];
@@ -30,6 +31,23 @@ export function createFetching(options: FetchingOptions = {}) {
     new URLPattern(input)
   );
 
+  const randomDomain = getRandomDomain();
+
+  Deno.permissions.query({
+    name: "net",
+    host: randomDomain,
+  }).then((status) => {
+    if (status.state === "granted") {
+      console.warn(
+        sprintf(
+          "[fetching] %s - A randomly generated domain (%s) is granted net permission.",
+          bold(yellow("WARNING")),
+          randomDomain,
+        ),
+      );
+    }
+  });
+
   const fetching: FetchImpl = async (input, init) => {
     const startTime = performance.now();
     const method =
@@ -43,9 +61,15 @@ export function createFetching(options: FetchingOptions = {}) {
       ? new URL(input.url)
       : new URL(input);
 
-    const isOriginAllowed = allowedOriginPatterns.some((origin) =>
-      origin.test(url)
-    );
+    const isPermissionGranted = await Deno.permissions.query({
+      name: "net",
+      host: url.host,
+    }).then((status) => status.state === "granted");
+
+    const isOriginAllowed =
+      (isPermissionGranted && allowedOriginPatterns.length === 0) ||
+      isPermissionGranted &&
+        allowedOriginPatterns.some((origin) => origin.test(url));
 
     if (!isOriginAllowed) {
       throw new Error(
@@ -91,4 +115,17 @@ export function createFetching(options: FetchingOptions = {}) {
   };
 
   return fetching;
+}
+
+function getRandomDomain(length = 16) {
+  let hostname = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+
+  for (let i = 0; i < length; i++) {
+    hostname += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+
+  return `${hostname}.com`;
 }

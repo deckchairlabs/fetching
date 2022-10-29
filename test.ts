@@ -5,8 +5,6 @@ const fetching = createFetching({
   cache: await caches.open("v3"),
   log: prettyLog,
   allowedOrigins: [{
-    hostname: "jsonplaceholder.typicode.com",
-  }, {
     hostname: "httpbin.org",
   }],
 });

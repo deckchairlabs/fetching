@@ -1,4 +1,3 @@
-import { sprintf } from "https://deno.land/std@0.161.0/fmt/printf.ts";
 import {
   blue,
   brightGreen,
@@ -8,8 +7,9 @@ import {
   green,
   magenta,
   red,
+  sprintf,
   yellow,
-} from "https://deno.land/std@0.161.0/fmt/colors.ts";
+} from "./deps.ts";
 import { FetchLogRecord } from "./fetching.ts";
 
 export function prettyLog(logRecord: FetchLogRecord) {
