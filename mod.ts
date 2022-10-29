@@ -15,7 +15,7 @@ export type FetchLogRecord = {
   cacheMatch?: boolean;
 };
 
-const CACHE_HEADER_KEY = "x-ultra-cache";
+const CACHE_HEADER_KEY = "x-fetching-cache";
 
 export function createFetching(options: FetchingOptions = {}) {
   const { cache, log, allowedOrigins = [] } = options;
